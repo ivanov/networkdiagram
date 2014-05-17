@@ -1,0 +1,31 @@
+.grid {
+	stroke: black;
+	stroke-width: 1px;
+	fill: red;
+}
+.arc {
+	stroke: black;
+	fill: none;
+}
+.node {
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 10px;
+	width: 100px;
+	padding: 3px;
+	border: 1px solid #369;
+}
+.text { padding: 6px; 
+}
+ .mediator {
+	fill: #b30000;
+}
+.lawfirm {
+	fill:  rgb(218, 215, 203);
+ 	stroke:  #b30000;
+}
+path.active {
+	stroke: red;
+}
+.bkgr {
+	background-color: #e5e5e5;
+}

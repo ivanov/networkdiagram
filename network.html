@@ -1,0 +1,113 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<link rel="stylesheet" type="text/css" href="networks.css"/>
+<title>  Testing Force Layout </title>
+</head>
+
+<body>
+<script type="text/javascript" src="d3.v3.js"></script>
+<script type="text/javascript" src="queue.js"></script>
+ 
+<p  > Hello, network! </p>
+
+
+<script> 
+
+	var w = 600;
+			var h = 300;
+			var padding = 30;
+			
+			var svg = d3.select("body")
+						.append("svg")
+						.attr("class", "bkgr");
+
+function forceDirected() {
+	
+	queue()
+	.defer(d3.csv, "nodelist.csv")
+	.defer(d3.csv, "edgelist.csv")
+	.await(function(error, file1, file2) { createForceLayout(file1, file2);
+	});
+	
+	
+	function createForceLayout(nodes,edges) {
+	var nodeHash = {};
+	for (x in nodes) {
+		nodeHash[nodes[x].id] = nodes[x];
+	}
+	
+	for (x in edges) {
+		edges[x].weight = parseInt(edges[x].weight);
+		edges[x].source = nodeHash[edges[x].source];
+		edges[x].target = nodeHash[edges[x].target];
+	}
+	
+	var weightScale = d3.scale.linear()
+	
+.domain(d3.extent(edges, function(d) {return d.weight}))
+.range([.1,1]);
+	
+	force = d3.layout.force()
+	.charge(-1000) // #a  How much each node pushes away each other, if set to a positive value, nodes will attract each other
+	.size([500,500])
+.nodes(nodes)
+.links(edges)
+.on("tick", forceTick); // #b  “tick” events are fired continuously, running the associated function
+	
+	
+	d3.select("svg").selectAll("line.link")
+.data(edges, function (d) {return d.source.id + "-" + d.target.id})  // #c Key values for our nodes and edges will help when we update the network later
+	.enter()
+	.append("line")
+	.attr("class", "link")
+	.style("stroke", "black")
+	.style("opacity", .5)
+	.style("stroke-width", function(d) {return d.weight});
+	
+	
+	var nodeEnter = d3.select("svg").selectAll("g.node")
+.data(nodes, function (d) {return d.id})
+.enter()
+.append("g")
+.attr("class", "node");
+
+	nodeEnter.append("circle")
+	.attr("r", 5)
+	.style("fill", "lightgray")
+	.style("stroke", "black")
+	.style("stroke-width", "1px");
+	
+	nodeEnter.append("text")
+	.style("text-anchor", "middle")
+	.attr("y", 15)
+	.text(function(d) {return d.id})
+	
+	
+	force.start();  // #d  Initializing the network will start firing “tick” events as well as calculate the degree centrality of nodes
+	
+	
+	function forceTick() {
+	d3.selectAll("line.link")
+	.attr("x1", function (d) {return d.source.x}) // #e  The tick function updates the edge drawing code and node drawing code based on the newly calculated node positions
+	.attr("x2", function (d) {return d.target.x})
+	.attr("y1", function (d) {return d.source.y})
+	.attr("y2", function (d) {return d.target.y});
+	
+	
+	d3.selectAll("g.node")
+	.attr("transform", function (d) {return "translate("+d.x+","+d.y+")"})
+	}
+  }
+}
+
+
+forceDirected();
+</script>
+
+
+
+
+</body>
+</html>

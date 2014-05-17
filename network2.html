@@ -1,0 +1,203 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<!--<link rel="stylesheet" type="text/css" href="networks.css"/>-->
+
+<title> Mediators and Plaintiff Law Firms Network </title>
+</head>
+
+<body>
+<script type="text/javascript" src="../d3.v3.js"></script>
+<script type="text/javascript" src="queue.js"></script>
+
+<style>
+.grid {
+	stroke: black;
+	stroke-width: 1px;
+	fill: red;
+}
+.arc {
+	stroke: black;
+	fill: none;
+}
+.node {
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 10px;
+	width: 100px;
+	padding: 3px;
+	border: 1px solid #369;
+}
+.text { padding: 6px; 
+}
+ .mediator {
+	fill: #b30000;
+}
+.lawfirm {
+	fill:  rgb(218, 215, 203);
+ 	stroke:  #b30000;
+}
+path.active {
+	stroke: red;
+}
+.bkgr {
+	background-color: #e5e5e5;
+}
+</style>
+ 
+<p> Hello, network! </p>
+
+
+<script> 
+
+	var w = 600;
+			var h = 300;
+			var padding = 30;
+			
+			var svg = d3.select("body")
+						.append("svg")
+						.attr("class", "bkgr");
+
+function forceDirected() {
+	
+	queue()
+	.defer(d3.csv, "nodelist3.csv")
+	.defer(d3.csv, "edgelist3.csv")
+	.await(function(error, file1, file2) { createForceLayout(file1, file2);
+	});
+	
+	
+	function createForceLayout(nodes,edges) {
+	var nodeHash = {};
+	for (x in nodes) {
+		nodeHash[nodes[x].id] = nodes[x];
+	}
+ 	console.log (nodeHash);
+	for (x in edges) {
+		edges[x].weight = parseInt(edges[x].weight);
+		edges[x].source = nodeHash[edges[x].source];
+		edges[x].target = nodeHash[edges[x].target];
+	}
+	
+	var weightScale = d3.scale.linear()  
+	
+.domain(d3.extent(edges, function(d) {return d.weight}))
+.range([.1,1]);  //  defaults to weight = 1
+	
+	force = d3.layout.force()
+	.charge(-1200) // #a  How much each node pushes away each other, if set to a positive value, nodes will attract each other
+	.size([800,800])  // size of whole animation  width and height
+.nodes(nodes)
+.links(edges)
+.on("tick", forceTick); // #b  “tick” events are fired continuously, running the associated function
+	
+	
+	d3.select("svg").selectAll("line.link")
+.data(edges, function (d) {return d.source.id + "-" + d.target.id})  // #c Key values for our nodes and edges will help when we update the network later
+	.enter()
+	.append("line")
+	.attr("class", "link")
+	.style("stroke", "black")
+	.style("opacity", .5)
+	.style("stroke-width", function(d) {return d.weight});
+ 	
+	var nodeEnter = d3.select("svg").selectAll("g.node")
+.data(nodes,   function (d) {return d.id})
+.enter()
+.append("g")
+.attr("class", "node");
+
+console.log (nodeEnter); // shows all 27 nodes
+  
+   
+	 nodeEnter.append("circle")
+ 	.attr("r", 5)
+ 	.style("stroke", "black")
+ 	.style("stroke-width", "1px")
+	.attr("class", function (d) {return d.group});
+ ;
+
+//// replace circle with rectangular
+//    nodeEnter.append('rect')
+//        .attr('x', -100)
+//        .attr('y', -5)
+//        .attr('rx',  5)
+//        .attr('height', '20')
+//        .attr('width' , '200')
+//		.attr("class", function (d) {return d.group})
+//		
+//	   .on("mouseover", function(d,i) {
+//	 		   console.log(d, this.nid);
+//	  
+//			//	return   d.value ;
+//		  
+//		   })
+//	 
+//		 .on("click", function(d,i) {
+//			   console.log(d, this.nid);
+//			   window.location ="https://sla.law.stanford.edu/node/36552";				 
+//		   });		
+//	
+//		;
+
+
+	nodeEnter.append("text")
+	.style("text-anchor", "middle")
+	.attr("y", 7)
+//	.attr("dy", ".1em")
+	.text(function(d) {return d.id})
+	.attr("class", "text");
+	
+	force.start();  // #d  Initializing the network will start firing “tick” events as well as calculate the degree centrality of nodes
+	
+	
+	function forceTick() {
+	d3.selectAll("line.link")
+	.attr("x1", function (d) {return d.source.x}) // #e  The tick function updates the edge drawing code and node drawing code based on the newly calculated node positions
+	.attr("x2", function (d) {return d.target.x})
+	.attr("y1", function (d) {return d.source.y})
+	.attr("y2", function (d) {return d.target.y});
+	
+	
+	d3.selectAll("g.node")
+	.attr("transform", function (d) {return "translate("+d.x+","+d.y+")"})
+	}
+  }
+}
+
+
+// function to wrap long text http://bl.ocks.org/mbostock/7555321
+
+function wrap(text, width) {
+  text.each(function() {
+    var text = d3.select(this),
+        words = text.text().split(/\s+/).reverse(),
+        word,
+        line = [],
+        lineNumber = 0,
+        lineHeight = 1.1, // ems
+        y = text.attr("y"),
+        dy = parseFloat(text.attr("dy")),
+        tspan = text.text(null).append("tspan").attr("x", 0).attr("y", y).attr("dy", dy + "em");
+    while (word = words.pop()) {
+      line.push(word);
+      tspan.text(line.join(" "));
+      if (tspan.node().getComputedTextLength() > width) {
+        line.pop();
+        tspan.text(line.join(" "));
+        line = [word];
+        tspan = text.append("tspan").attr("x", 0).attr("y", y).attr("dy", ++lineNumber * lineHeight + dy + "em").text(word);
+      }
+    }
+  });
+}
+
+
+forceDirected();
+</script>
+
+
+
+
+</body>
+</html>
