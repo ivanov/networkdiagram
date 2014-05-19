@@ -30,10 +30,10 @@
 }
 .text { padding: 6px; 
 }
- .mediator {
+.source {
 	fill: #b30000;
 }
-.lawfirm {
+.target {
 	fill:  rgb(218, 215, 203);
  	stroke:  #b30000;
 }
@@ -61,19 +61,19 @@ path.active {
 function forceDirected() {
 	
 	queue()
-	.defer(d3.csv, "edgelist3.csv")
+	.defer(d3.csv, "edgelist4.csv")
 	.await(function(error, file2) { createForceLayout(file2);
 	});
 	
 	
-	function createForceLayout(edges) {
+	function createForceLayout(edges, group) {
 	var nodeHash = {};
     var nodes = []
 
     // helper function to populate our node list
-    function add_node(name) {
+    function add_node(name, group) {
         if ( nodeHash[name] === undefined ) {
-            nodeHash[name] ={id: name } ;
+            nodeHash[name] ={id: name, group: group} ;
             nodes.push(nodeHash[name]);
         }
     }
@@ -81,8 +81,8 @@ function forceDirected() {
 	for (x in edges) {
         // add the edge endings to the nodeHash, we might be doing it too many
         // times, but c'est la vie
-        add_node(edges[x].source);
-        add_node(edges[x].target);
+        add_node(edges[x].source, 'source');
+        add_node(edges[x].target, 'target');
 		edges[x].weight = parseInt(edges[x].weight);
 		edges[x].source = nodeHash[edges[x].source];
 		edges[x].target = nodeHash[edges[x].target];
