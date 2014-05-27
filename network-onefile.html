@@ -43,6 +43,11 @@ path.active {
 .bkgr {
 	background-color: #e5e5e5;
 }
+
+.highlight {
+    fill: green;
+
+}
 </style>
  
 <p> Hello, network! </p>
@@ -60,6 +65,8 @@ path.active {
 						.attr("height", "800px")
 						.attr("width", "90%");
 
+var nodes = []
+var g_edges = [];
 function forceDirected() {
 	
 	queue()
@@ -70,24 +77,26 @@ function forceDirected() {
 	
 	function createForceLayout(edges, group) {
 	var nodeHash = {};
-    var nodes = []
 
     // helper function to populate our node list
-    function add_node(name, group) {
+    function add_node(name, group, edge_id) {
         if ( nodeHash[name] === undefined ) {
-            nodeHash[name] ={id: name, group: group} ;
+            nodeHash[name] ={id: name, group: group, edges: []} ;
             nodes.push(nodeHash[name]);
         }
+       nodeHash[name].edges.push(edge_id);
     }
 
 	for (x in edges) {
         // add the edge endings to the nodeHash, we might be doing it too many
         // times, but c'est la vie
-        add_node(edges[x].source, 'source');
-        add_node(edges[x].target, 'target');
+        add_node(edges[x].source, 'source', x);
+        add_node(edges[x].target, 'target', x);
 		edges[x].weight = parseInt(edges[x].weight);
 		edges[x].source = nodeHash[edges[x].source];
 		edges[x].target = nodeHash[edges[x].target];
+
+        g_edges.push(edges[x]);
 	}
 	
 	var weightScale = d3.scale.linear()  
@@ -125,35 +134,95 @@ console.log (nodeEnter); // shows all 27 nodes
  	.attr("r", 5)
  	.style("stroke", "black")
  	.style("stroke-width", "1px")
-	.attr("class", function (d) {return d.group});
- ;
-
-//// replace circle with rectangular
-//    nodeEnter.append('rect')
-//        .attr('x', -100)
-//        .attr('y', -5)
-//        .attr('rx',  5)
-//        .attr('height', '20')
-//        .attr('width' , '200')
-//		.attr("class", function (d) {return d.group})
-//		
+	.attr("class", function (d) {return d.group})
 //	   .on("mouseover", function(d,i) {
-//	 		   console.log(d, this.nid);
+//               my_d = d;
+//	 		   console.log(d, d.edges);
+//               highlight(d.edges);
+//
+//	  
+//			//	return   d.value ;
+//		  
+//		   })
+//	   .on("mouseout", function(d,i) {
+//               var rect = d3.select(this);
+//               //rect.style("class", function(
+//               my_d = d;
+//	 		   console.log("removing", d.edges);
+//               highlight(d.edges, false);
+//
 //	  
 //			//	return   d.value ;
 //		  
 //		   })
 //	 
-//		 .on("click", function(d,i) {
-//			   console.log(d, this.nid);
-//			   window.location ="https://sla.law.stanford.edu/node/36552";				 
-//		   });		
-//	
-//		;
+// ;
+
+ var highlight = function (edge_list, highlight) {
+     if (highlight === undefined) {
+         highlight = true;
+     }
+     var i;
+     var source, target;
+     for (i in edge_list) {
+         //console.log("here be edges!", edge_list[i]);
+         source = g_edges[edge_list[i]].source.index;
+         target = g_edges[edge_list[i]].target.index;
+         //console.log(source, " -> ", target)
+         nodes[source].highlight = highlight;
+         nodes[target].highlight = highlight;
+     }
+     console.log(d3.select("svg").selectAll("g.node rect").classed('highlight', 
+     //console.log(d3.select("svg").selectAll("g.node circle").classed('highlight', 
+             function (e,j) {
+             // console.log('highlight', highlight, e);
+             //var rehighlight = e.highlight ; // == source || j == target;
+             //if (rehighlight) console.log("rehihglight", j, source, target);
+             return e.highlight
+
+             }));
+
+ }
+// replace circle with rectangular
+    nodeEnter.append('rect')
+        .attr('x', -100)
+        .attr('y', -5)
+        .attr('rx',  5)
+        .attr('height', '20')
+        .attr('width' , '200')
+		.attr("class", function (d) {return d.group})
+		
+	   .on("mouseover", function(d,i) {
+               //var rect = d3.select(this);
+	 		   console.log(d, d.edges);
+               highlight(d.edges);
+
+	  
+			//	return   d.value ;
+		  
+		   })
+	   .on("mouseout", function(d,i) {
+               var rect = d3.select(this);
+               //rect.style("class", function(
+	 		   console.log("removing", d.edges);
+               highlight(d.edges, false);
+
+	  
+			//	return   d.value ;
+		  
+		   })
+	 
+		 .on("click", function(d,i) {
+			   console.log(d, this.nid);
+               highlight(d.edges, false);
+		   });		
+	
+		;
 
 
 	nodeEnter.append("text")
 	.style("text-anchor", "middle")
+    .style("pointer-events", "none")
 	.attr("y", 7)
 //	.attr("dy", ".1em")
 	.text(function(d) {return d.id})
