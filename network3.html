@@ -43,6 +43,8 @@ path.active {
 .bkgr {
 	background-color: #e5e5e5;
 }
+
+svg { width:600px; height:600px; border:1px solid red}
 </style>
  
 <p> Hello, network! </p>
@@ -86,7 +88,7 @@ function forceDirected() {
 	
 	force = d3.layout.force()
 	.charge(-1200) // #a  How much each node pushes away each other, if set to a positive value, nodes will attract each other
-	.size([800,800])  // size of whole animation  width and height
+	.size([600,600])  // size of whole animation  width and height
 .nodes(nodes)
 .links(edges)
 .on("tick", forceTick); // #b  “tick” events are fired continuously, running the associated function
