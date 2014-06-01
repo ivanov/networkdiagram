@@ -67,6 +67,7 @@ path.active {
 
 var nodes = []
 var g_edges = [];
+var box_width=200; // variable that determines box width and text length
 function forceDirected() {
 	
 	queue()
@@ -127,7 +128,7 @@ function forceDirected() {
 .append("g")
 .attr("class", "node");
 
-console.log (nodeEnter); // shows all 27 nodes
+//console.log (nodeEnter); // shows all 27 nodes
   
    
 	 nodeEnter.append("circle")
@@ -135,28 +136,10 @@ console.log (nodeEnter); // shows all 27 nodes
  	.style("stroke", "black")
  	.style("stroke-width", "1px")
 	.attr("class", function (d) {return d.group})
-//	   .on("mouseover", function(d,i) {
-//               my_d = d;
-//	 		   console.log(d, d.edges);
-//               highlight(d.edges);
-//
-//	  
-//			//	return   d.value ;
-//		  
-//		   })
-//	   .on("mouseout", function(d,i) {
-//               var rect = d3.select(this);
-//               //rect.style("class", function(
-//               my_d = d;
-//	 		   console.log("removing", d.edges);
-//               highlight(d.edges, false);
-//
-//	  
-//			//	return   d.value ;
-//		  
-//		   })
-//	 
-// ;
+	
+    // add on-hover tooltip with the full name (in case it is wrapped)
+    nodeEnter.append("svg:title")
+    .text(function(d) {return d.id;})
 
  var highlight = function (edge_list, highlight) {
      if (highlight === undefined) {
@@ -172,7 +155,8 @@ console.log (nodeEnter); // shows all 27 nodes
          nodes[source].highlight = highlight;
          nodes[target].highlight = highlight;
      }
-     console.log(d3.select("svg").selectAll("g.node rect").classed('highlight', 
+     //console.log(
+     d3.select("svg").selectAll("g.node rect").classed('highlight', 
      //console.log(d3.select("svg").selectAll("g.node circle").classed('highlight', 
              function (e,j) {
              // console.log('highlight', highlight, e);
@@ -180,7 +164,8 @@ console.log (nodeEnter); // shows all 27 nodes
              //if (rehighlight) console.log("rehihglight", j, source, target);
              return e.highlight
 
-             }));
+             });
+     //);
 
  }
 // replace circle with rectangular
@@ -189,12 +174,12 @@ console.log (nodeEnter); // shows all 27 nodes
         .attr('y', -5)
         .attr('rx',  5)
         .attr('height', '20')
-        .attr('width' , '200')
+        .attr('width' , box_width)
 		.attr("class", function (d) {return d.group})
 		
 	   .on("mouseover", function(d,i) {
-               //var rect = d3.select(this);
-	 		   console.log(d, d.edges);
+               //d3.select(this).attr('title', d.id) svg:title takes care of this
+	 		   //console.log(d, d.edges);
                highlight(d.edges);
 
 	  
@@ -204,7 +189,6 @@ console.log (nodeEnter); // shows all 27 nodes
 	   .on("mouseout", function(d,i) {
                var rect = d3.select(this);
                //rect.style("class", function(
-	 		   console.log("removing", d.edges);
                highlight(d.edges, false);
 
 	  
@@ -242,7 +226,23 @@ console.log (nodeEnter); // shows all 27 nodes
 	d3.selectAll("g.node")
 	.attr("transform", function (d) {return "translate("+d.x+","+d.y+")"})
 	}
+    pi_wrap();
   }
+
+// helper function to drop all but the first set of characters which will fit
+// inside the box, and adds and ellipsis to the end
+function pi_wrap() {
+    var text = d3.selectAll('text')[0];
+    text.forEach(function(x,i ) { 
+        while (x.getBBox().width > box_width - 20) {
+            // keep dropping one letter off the end until we're down to 200 pixels
+            x.textContent = x.textContent.slice(0, x.textContent.length-2) 
+            //x.textContent += "…"
+            x.textContent += '\u2026'
+        }
+    });
+};
+
 }
 
 
